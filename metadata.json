@@ -2,5 +2,7 @@
   "name": "RJSC Company Registration Document Generator",
   "description": "Interactive Bangladesh Companies Act 1994 statutory company registration document generator with live A4 preview, Form I, Form IX, MoA subscribers, digital signatures, and PDF print export.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
