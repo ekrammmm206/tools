@@ -5,16 +5,19 @@ import {
   formatTaka,
   getCapitalInWords
 } from '../utils/partnershipCalculations';
+import { StatutoryLang, t } from '../utils/statutoryTranslations';
 import { ShieldCheck, FileCheck2, Scale } from 'lucide-react';
 
 interface PartnershipDocumentPreviewProps {
   data: PartnershipDeedState;
   zoom: number;
+  docLang?: StatutoryLang;
 }
 
 export const PartnershipDocumentPreview: React.FC<PartnershipDocumentPreviewProps> = ({
   data,
-  zoom
+  zoom,
+  docLang = 'en'
 }) => {
   const { info, party1, party2, witnesses, selectedSubDoc } = data;
 
@@ -45,15 +48,15 @@ export const PartnershipDocumentPreview: React.FC<PartnershipDocumentPreviewProp
             {/* Top Notary & Stamp Banner */}
             <div className="border-b-2 border-slate-900 pb-3 mb-6 text-center">
               <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-slate-500 font-sans mb-1 font-semibold">
-                <span>Non-Judicial Stamp Tk. 2000/-</span>
+                <span>{t('deed.stamp', docLang)}</span>
                 <span className="flex items-center gap-1 text-slate-700">
                   <Scale className="w-3.5 h-3.5 text-amber-700 inline" />
-                  Partnership Act, 1932 (Act IX of 1932)
+                  {t('deed.act', docLang)}
                 </span>
-                <span>Notary Public, Dhaka</span>
+                <span>{t('doc.notaryPublic', docLang)}</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-950 font-serif mt-1">
-                Deed of Partnership
+                {t('deed.title', docLang)}
               </h1>
               <div className="inline-block bg-slate-900 text-white text-[11px] font-sans font-bold px-4 py-0.5 mt-1 tracking-widest rounded-xs">
                 {info.firmName}
@@ -67,30 +70,30 @@ export const PartnershipDocumentPreview: React.FC<PartnershipDocumentPreviewProp
 
             {/* Between Parties */}
             <div className="text-center font-bold text-xs uppercase tracking-wider text-slate-800 my-2">
-              — BY AND BETWEEN —
+              {t('deed.byAndBetween', docLang)}
             </div>
 
             {/* First Party */}
             <div className="border border-slate-300 rounded-sm p-3 bg-slate-50/50 mb-3 text-justify text-[12px] leading-normal">
               <p>
-                <strong>1. {party1.name}</strong>, Son of: <strong>{party1.father}</strong>, Mother: <strong>{party1.mother}</strong>, of {party1.address}. Date of Birth: <strong>{party1.dob}</strong>, National ID No.: <strong>{party1.nid}</strong>, e-TIN: <strong>{party1.tin}</strong>, Profession: {party1.profession}, Nationality: {party1.nationality}, Religion: Islam.
+                <strong>1. {party1.name}</strong>, Son of: <strong>{party1.father}</strong>, Mother: <strong>{party1.mother}</strong>, of {party1.address}. {t('doc.dob', docLang)} <strong>{party1.dob}</strong>, {t('doc.nid', docLang)} <strong>{party1.nid}</strong>, {t('doc.tin', docLang)} <strong>{party1.tin}</strong>, {t('doc.occupation', docLang)} {party1.profession}, {t('doc.nationality', docLang)} {party1.nationality}, {t('doc.religion', docLang)} Islam.
               </p>
               <div className="text-right font-bold text-[11px] text-blue-900 mt-1 uppercase">
-                ... FIRST PARTY / {party1.role}
+                ... {t('deed.firstParty', docLang)}
               </div>
             </div>
 
             <div className="text-center font-bold text-[11px] uppercase tracking-widest text-slate-500 my-1">
-              AND
+              {docLang === 'bn' ? 'এবং' : 'AND'}
             </div>
 
             {/* Second Party */}
             <div className="border border-slate-300 rounded-sm p-3 bg-slate-50/50 mb-4 text-justify text-[12px] leading-normal">
               <p>
-                <strong>2. {party2.name}</strong>, Son of: <strong>{party2.father}</strong>, Mother: <strong>{party2.mother}</strong>, of {party2.address}. Date of Birth: <strong>{party2.dob}</strong>, National ID No.: <strong>{party2.nid}</strong>, e-TIN: <strong>{party2.tin}</strong>, Profession: {party2.profession}, Nationality: {party2.nationality}, Religion: Islam.
+                <strong>2. {party2.name}</strong>, Son of: <strong>{party2.father}</strong>, Mother: <strong>{party2.mother}</strong>, of {party2.address}. {t('doc.dob', docLang)} <strong>{party2.dob}</strong>, {t('doc.nid', docLang)} <strong>{party2.nid}</strong>, {t('doc.tin', docLang)} <strong>{party2.tin}</strong>, {t('doc.occupation', docLang)} {party2.profession}, {t('doc.nationality', docLang)} {party2.nationality}, {t('doc.religion', docLang)} Islam.
               </p>
               <div className="text-right font-bold text-[11px] text-emerald-900 mt-1 uppercase">
-                ... SECOND PARTY / {party2.role}
+                ... {t('deed.secondParty', docLang)}
               </div>
             </div>
 

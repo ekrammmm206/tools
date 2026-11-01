@@ -1,13 +1,19 @@
 import React from 'react';
 import { ValuationDocumentState } from '../types/valuation';
 import { calculateValuationFigures, formatBdt, formatForeign } from '../utils/valuationCalculations';
+import { StatutoryLang, t } from '../utils/statutoryTranslations';
 
 interface ValuationDocumentPreviewProps {
   data: ValuationDocumentState;
   zoom: number;
+  docLang?: StatutoryLang;
 }
 
-export const ValuationDocumentPreview: React.FC<ValuationDocumentPreviewProps> = ({ data, zoom }) => {
+export const ValuationDocumentPreview: React.FC<ValuationDocumentPreviewProps> = ({
+  data,
+  zoom,
+  docLang = 'en'
+}) => {
   const { general, applicant, sponsor, summary, lands, investments, employmentIncomes, rentalIncomes, businessIncomes, includedPages } = data;
 
   // Compute live sums from tables if enabled
@@ -44,7 +50,7 @@ export const ValuationDocumentPreview: React.FC<ValuationDocumentPreviewProps> =
       {includedPages.cover && (
         <div className="a4-page bg-white shadow-xl print:shadow-none border border-slate-200 print:border-none w-[210mm] min-h-[297mm] p-[25mm] box-border text-black font-serif relative flex flex-col justify-between">
           <div className="text-right text-xs text-slate-500 font-sans">
-            Reference No.: <strong>{general.refNo}</strong>
+            {t('doc.ref', docLang)} <strong>{general.refNo}</strong>
           </div>
 
           <div className="text-center my-auto py-16 space-y-8">

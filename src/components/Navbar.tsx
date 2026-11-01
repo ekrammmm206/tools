@@ -10,23 +10,31 @@ import {
   Columns,
   FileText,
   SlidersHorizontal,
-  Building
+  Building,
+  Languages,
+  FileDown,
+  Loader2
 } from 'lucide-react';
 import { DocumentState } from '../types/company';
+import { StatutoryLang } from '../utils/statutoryTranslations';
 
 interface NavbarProps {
-  activeDocType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon';
-  onDocTypeChange: (docType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon') => void;
+  activeDocType: 'withholdingReturn' | 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon';
+  onDocTypeChange: (docType: 'withholdingReturn' | 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon') => void;
   title: string;
   zoom: number;
   onZoomChange: (newZoom: number) => void;
   viewMode: 'split' | 'form' | 'preview';
   onViewModeChange: (mode: 'split' | 'form' | 'preview') => void;
   onPrint: () => void;
+  onExportPdf?: () => void;
+  isExportingPdf?: boolean;
   onExportJson: () => void;
   onImportJson: (imported: any) => void;
   onReset: () => void;
   subtitle?: string;
+  docLang: StatutoryLang;
+  onDocLangChange: (lang: StatutoryLang) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -38,10 +46,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   viewMode,
   onViewModeChange,
   onPrint,
+  onExportPdf,
+  isExportingPdf = false,
   onExportJson,
   onImportJson,
   onReset,
-  subtitle
+  subtitle,
+  docLang,
+  onDocLangChange
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -77,6 +89,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="hidden xl:flex items-center bg-slate-800 p-0.5 rounded-md border border-slate-700 text-[11px]">
               <button
                 type="button"
+                onClick={() => onDocTypeChange('withholdingReturn')}
+                className={`px-2 py-0.5 rounded transition ${
+                  activeDocType === 'withholdingReturn'
+                    ? 'bg-amber-600 text-white font-semibold'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Withholding Return (TDS)
+              </button>
+              <button
+                type="button"
                 onClick={() => onDocTypeChange('partnershipRecon')}
                 className={`px-2 py-0.5 rounded transition ${
                   activeDocType === 'partnershipRecon'
@@ -106,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                RJSC Annual Return & AGM
+                RJSC Annual Return
               </button>
               <button
                 type="button"
@@ -117,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Combined Legal (7 Docs)
+                Combined Legal
               </button>
               <button
                 type="button"
@@ -148,6 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onChange={(e) => onDocTypeChange(e.target.value as any)}
               className="xl:hidden bg-slate-800 border border-slate-700 text-white text-[11px] rounded px-1.5 py-0.5 font-medium"
             >
+              <option value="withholdingReturn">ATC Monthly Withholding Return (TDS - NBR)</option>
               <option value="partnershipRecon">Partnership Reconstitution (Form V & 7 Docs)</option>
               <option value="partnership">Partnership Deed (1932 Act)</option>
               <option value="rjscReturn">RJSC Annual Return & AGM</option>
@@ -200,6 +224,40 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <FileText className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Preview</span>
+          </button>
+        </div>
+
+        {/* Statutory Output Language Toggle: English ⇄ Bengali */}
+        <div className="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs">
+          <div className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-slate-400 font-medium select-none">
+            <Languages className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden xl:inline">Output:</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onDocLangChange('en')}
+            className={`px-2 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+              docLang === 'en'
+                ? 'bg-slate-700 text-white shadow-xs'
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Render output document headers and labels in English"
+            aria-label="Switch output to English"
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            onClick={() => onDocLangChange('bn')}
+            className={`px-2 py-1 rounded-md text-xs font-semibold transition font-bengali cursor-pointer ${
+              docLang === 'bn'
+                ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Render output document headers and labels in Bengali (বাংলা)"
+            aria-label="Switch output to Bengali"
+          >
+            বাংলা
           </button>
         </div>
 
@@ -270,23 +328,49 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={onExportJson}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition cursor-pointer"
           title="Save document state to JSON"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Save JSON</span>
         </button>
 
-        {/* Print / Save as PDF Button */}
+        {/* Print via Browser */}
         <button
           type="button"
           onClick={onPrint}
-          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow-sm transition active:scale-95 shrink-0"
-          title="Print or Save as PDF"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition cursor-pointer"
+          title="Print document or open browser print dialog"
         >
-          <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden xs:inline sm:inline">Print / PDF</span>
-          <span className="xs:hidden sm:hidden">PDF</span>
+          <Printer className="w-3.5 h-3.5" />
+          <span>Print</span>
+        </button>
+
+        {/* Export PDF Button (jsPDF & html2canvas A4 Preserved) */}
+        <button
+          type="button"
+          onClick={onExportPdf}
+          disabled={isExportingPdf}
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg shadow-md transition-all duration-150 focus:outline-none shrink-0 cursor-pointer ${
+            isExportingPdf
+              ? 'bg-emerald-800 text-emerald-200 cursor-wait'
+              : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 active:scale-95 text-white shadow-emerald-950/40 ring-2 ring-emerald-400/80 ring-offset-2 ring-offset-slate-900'
+          }`}
+          title="Export high-resolution A4 PDF preserving exact layout, fonts, and styles"
+        >
+          {isExportingPdf ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-emerald-300" />
+              <span className="hidden sm:inline">Generating...</span>
+              <span className="sm:hidden">PDF...</span>
+            </>
+          ) : (
+            <>
+              <FileDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </>
+          )}
         </button>
       </div>
     </header>

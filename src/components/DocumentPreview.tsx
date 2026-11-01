@@ -1,14 +1,20 @@
 import React from 'react';
 import { DocumentState } from '../types/company';
 import { formatSharesWithWords, calculateTotalShares } from '../utils/numberToWords';
+import { StatutoryLang, t } from '../utils/statutoryTranslations';
 import { AVATAR_SVGS } from '../data/defaultData';
 
 interface DocumentPreviewProps {
   data: DocumentState;
   zoom: number; // percentage e.g. 100
+  docLang?: StatutoryLang;
 }
 
-export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ data, zoom }) => {
+export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
+  data,
+  zoom,
+  docLang = 'en'
+}) => {
   const { company, directors, subscribers, signatories, includedSections } = data;
 
   const totalShares = calculateTotalShares(subscribers.map((s) => s.shares));
@@ -91,7 +97,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ data, zoom }) 
               <span className="font-bold text-lg tracking-widest">RJSC</span>
             </div>
             
-            <h2 className="text-xl font-bold mb-6 underline">STATUTORY INCORPORATION DOSSIER</h2>
+            <h2 className="text-xl font-bold mb-6 underline">{t('comp.coverTitle', docLang)}</h2>
             
             <div className="text-lg leading-relaxed text-justify max-w-xl mx-auto p-8 border border-slate-300 rounded bg-slate-50/50">
               <p>

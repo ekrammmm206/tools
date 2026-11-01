@@ -1,15 +1,18 @@
 import React from 'react';
 import { RjscReturnState } from '../types/rjscReturn';
 import { calculateTotalSharesAndCapital, formatBdtNoDec } from '../utils/rjscReturnCalculations';
+import { StatutoryLang, t } from '../utils/statutoryTranslations';
 
 interface RjscReturnPreviewProps {
   data: RjscReturnState;
   zoom: number;
+  docLang?: StatutoryLang;
 }
 
 export const RjscReturnPreview: React.FC<RjscReturnPreviewProps> = ({
   data,
-  zoom
+  zoom,
+  docLang = 'en'
 }) => {
   const { meetingInfo, people, selectedSubDoc } = data;
   const summary = calculateTotalSharesAndCapital(people, meetingInfo.shareNominalValue);
@@ -31,14 +34,16 @@ export const RjscReturnPreview: React.FC<RjscReturnPreviewProps> = ({
         <div className="a4-page w-[210mm] min-h-[297mm] bg-white text-slate-900 p-16 shadow-2xl relative font-serif text-[13px] leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-12 flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center text-xs font-sans text-slate-600 mb-6">
-              <span>Ref: {meetingInfo.noticeRef}</span>
-              <span>Date: <strong>{meetingInfo.noticeDate}</strong></span>
+              <span>{t('doc.ref', docLang)} {meetingInfo.noticeRef}</span>
+              <span>{t('doc.date', docLang)} <strong>{meetingInfo.noticeDate}</strong></span>
             </div>
 
-            <p className="font-bold text-slate-800 mb-4">To All Honorable Shareholders</p>
+            <p className="font-bold text-slate-800 mb-4">
+              {docLang === 'bn' ? 'সম্মানিত শেয়ারহোল্ডারবৃন্দের অবগতির জন্য' : 'To All Honorable Shareholders'}
+            </p>
 
             <h2 className="text-center text-base font-bold underline uppercase tracking-wide text-slate-950 mb-4">
-              NOTICE OF THE ANNUAL GENERAL MEETING {meetingInfo.companyName}
+              {t('rjsc.noticeTitle', docLang)} — {meetingInfo.companyName}
             </h2>
 
             <p className="text-justify mb-4">

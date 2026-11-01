@@ -8,16 +8,19 @@ import {
   formatFx
 } from '../utils/combinedCalculations';
 import { numberToWordsInternational, numberToWordsBangladeshi } from '../utils/numberToWords';
+import { StatutoryLang, t } from '../utils/statutoryTranslations';
 import { Award, Stamp, CheckCircle2, ShieldCheck, MapPin, User, Calendar, FileText } from 'lucide-react';
 
 interface CombinedDocumentPreviewProps {
   data: CombinedDossierState;
   zoom: number;
+  docLang?: StatutoryLang;
 }
 
 export const CombinedDocumentPreview: React.FC<CombinedDocumentPreviewProps> = ({
   data,
-  zoom
+  zoom,
+  docLang = 'en'
 }) => {
   const financialTotals = calculateFinancialTotals(data.financialDeclaration);
   const sponsorTotals = calculateSponsorTotals(data.sponsorDeclaration);
@@ -56,10 +59,10 @@ export const CombinedDocumentPreview: React.FC<CombinedDocumentPreviewProps> = (
                   </div>
                 </div>
                 <h1 className="text-[17px] font-bold text-emerald-950 uppercase tracking-wide">
-                  Government of the People's Republic of Bangladesh
+                  {t('combined.govBd', docLang)}
                 </h1>
                 <h2 className="text-[14px] font-bold text-slate-800 uppercase tracking-tight mt-0.5">
-                  Office of the Registrar of Birth and Death
+                  {t('combined.birthOffice', docLang)}
                 </h2>
                 <h3 className="text-[13px] font-semibold text-slate-700">
                   {data.birthCertificate.office}
@@ -68,7 +71,7 @@ export const CombinedDocumentPreview: React.FC<CombinedDocumentPreviewProps> = (
                   {data.birthCertificate.ruleText}
                 </p>
                 <div className="inline-block bg-emerald-900 text-white font-sans font-bold text-[12px] px-4 py-0.5 rounded-full mt-2 tracking-widest uppercase">
-                  Birth Registration Certificate
+                  {t('combined.birthTitle', docLang)}
                 </div>
                 <div className="text-[11px] font-semibold text-slate-600 mt-0.5 font-sans">
                   [{data.birthCertificate.formNo}]
@@ -78,15 +81,15 @@ export const CombinedDocumentPreview: React.FC<CombinedDocumentPreviewProps> = (
               {/* Registration Reference Block */}
               <div className="grid grid-cols-2 gap-4 bg-slate-50 border border-slate-300 p-2.5 rounded font-sans text-[11px] mb-5">
                 <div>
-                  <span className="text-slate-500 font-semibold block">Date of Registration:</span>
+                  <span className="text-slate-500 font-semibold block">{docLang === 'bn' ? 'নিবন্ধনের তারিখ:' : 'Date of Registration:'}</span>
                   <span className="font-bold text-slate-800">{data.birthCertificate.regDate}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 font-semibold block">Date of Issuance:</span>
+                  <span className="text-slate-500 font-semibold block">{docLang === 'bn' ? 'সনদ প্রদানের তারিখ:' : 'Date of Issuance:'}</span>
                   <span className="font-bold text-slate-800">{data.birthCertificate.issueDate}</span>
                 </div>
                 <div className="col-span-2 border-t border-slate-200 pt-1.5 flex items-center justify-between">
-                  <span className="text-slate-600 font-bold">Birth Registration Number:</span>
+                  <span className="text-slate-600 font-bold">{docLang === 'bn' ? 'জন্ম নিবন্ধন নম্বর:' : 'Birth Registration Number:'}</span>
                   <span className="font-mono font-black text-[15px] tracking-wider text-emerald-900">
                     {data.birthCertificate.regNo}
                   </span>

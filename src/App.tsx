@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FileDown, FileText } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { InputPanel } from './components/InputPanel';
 import { DocumentPreview } from './components/DocumentPreview';
@@ -19,18 +20,26 @@ import { DEFAULT_COMBINED_STATE } from './data/defaultCombinedData';
 import { DEFAULT_RJSC_RETURN_STATE } from './data/defaultRjscReturnData';
 import { DEFAULT_PARTNERSHIP_STATE } from './data/defaultPartnershipData';
 import { DEFAULT_PARTNERSHIP_RECON_STATE } from './data/defaultPartnershipReconData';
+import { DEFAULT_WITHHOLDING_RETURN_STATE } from './data/defaultWithholdingReturnData';
 import { DocumentState } from './types/company';
 import { ValuationDocumentState } from './types/valuation';
 import { CombinedDossierState } from './types/combinedDossier';
 import { RjscReturnState } from './types/rjscReturn';
 import { PartnershipDeedState } from './types/partnership';
 import { PartnershipReconState } from './types/partnershipRecon';
+import { WithholdingReturnState } from './types/withholdingReturn';
+import { WithholdingReturnInputPanel } from './components/WithholdingReturnInputPanel';
+import { WithholdingReturnPreview } from './components/WithholdingReturnPreview';
+import { PdfExportModal } from './components/PdfExportModal';
+import { exportDocumentToPdf, getDefaultPdfFileName, PdfExportProgress } from './utils/pdfExport';
 import { formatTaka } from './utils/partnershipCalculations';
+import { StatutoryLang } from './utils/statutoryTranslations';
 
 export default function App() {
   const [activeDocType, setActiveDocType] = useState<
-    'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon'
-  >('partnershipRecon');
+    'withholdingReturn' | 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon'
+  >('withholdingReturn');
+  const [withholdingReturnState, setWithholdingReturnState] = useState<WithholdingReturnState>(DEFAULT_WITHHOLDING_RETURN_STATE);
   const [partnershipReconState, setPartnershipReconState] = useState<PartnershipReconState>(DEFAULT_PARTNERSHIP_RECON_STATE);
   const [partnershipState, setPartnershipState] = useState<PartnershipDeedState>(DEFAULT_PARTNERSHIP_STATE);
   const [valuationState, setValuationState] = useState<ValuationDocumentState>(DEFAULT_VALUATION_STATE);
@@ -38,6 +47,7 @@ export default function App() {
   const [combinedState, setCombinedState] = useState<CombinedDossierState>(DEFAULT_COMBINED_STATE);
   const [rjscReturnState, setRjscReturnState] = useState<RjscReturnState>(DEFAULT_RJSC_RETURN_STATE);
 
+  const [docLang, setDocLang] = useState<StatutoryLang>('en');
   const [zoom, setZoom] = useState<number>(85);
   const [viewMode, setViewMode] = useState<'split' | 'form' | 'preview'>('split');
 
@@ -99,15 +109,73 @@ export default function App() {
     }
   };
 
+  const [pdfProgress, setPdfProgress] = useState<PdfExportProgress | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+
+  const getTargetDocState = () => {
+    switch (activeDocType) {
+      case 'withholdingReturn':
+        return withholdingReturnState;
+      case 'partnershipRecon':
+        return partnershipReconState;
+      case 'partnership':
+        return partnershipState;
+      case 'rjscReturn':
+        return rjscReturnState;
+      case 'combined':
+        return combinedState;
+      case 'valuation':
+        return valuationState;
+      case 'company':
+      default:
+        return companyState;
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (isExportingPdf) return;
+    setIsExportingPdf(true);
+
+    const targetState = getTargetDocState();
+    const fileName = getDefaultPdfFileName(activeDocType, targetState);
+
+    try {
+      await exportDocumentToPdf({
+        containerId: 'document-output-scroll-container',
+        fileName,
+        scale: 2,
+        quality: 0.95,
+        onProgress: (progress) => {
+          setPdfProgress(progress);
+          if (progress.status === 'completed') {
+            setTimeout(() => {
+              setPdfProgress(null);
+              setIsExportingPdf(false);
+            }, 1200);
+          }
+        }
+      });
+    } catch (err: any) {
+      console.error('PDF export failed:', err);
+      // Wait momentarily so user can see error in modal, then allow retry
+      setTimeout(() => {
+        setIsExportingPdf(false);
+      }, 2000);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleExportJson = () => {
-    let payload: any = rjscReturnState;
-    let prefix = 'RJSC_Annual_Return_Hijaz';
+    let payload: any = withholdingReturnState;
+    let prefix = 'ATC_Withholding_Return_TDS';
 
-    if (activeDocType === 'partnershipRecon') {
+    if (activeDocType === 'withholdingReturn') {
+      payload = withholdingReturnState;
+      prefix = `${withholdingReturnState.general.companyName.replace(/[^a-zA-Z0-9]/g, '_')}_Withholding_TDS`;
+    } else if (activeDocType === 'partnershipRecon') {
       payload = partnershipReconState;
       prefix = `${partnershipReconState.firm.firmName.replace(/[^a-zA-Z0-9]/g, '_')}_Reconstitution`;
     } else if (activeDocType === 'partnership') {
@@ -139,7 +207,10 @@ export default function App() {
   };
 
   const handleImportJson = (imported: any) => {
-    if (imported.firm && imported.incoming && imported.outgoing) {
+    if (imported.salaries && imported.treasury && imported.general) {
+      setWithholdingReturnState(imported);
+      setActiveDocType('withholdingReturn');
+    } else if (imported.firm && imported.incoming && imported.outgoing) {
       setPartnershipReconState(imported);
       setActiveDocType('partnershipRecon');
     } else if (imported.info?.firmName && imported.party1 && imported.party2) {
@@ -163,7 +234,11 @@ export default function App() {
   };
 
   const handleReset = () => {
-    if (activeDocType === 'partnershipRecon') {
+    if (activeDocType === 'withholdingReturn') {
+      if (window.confirm('Reset ATC Monthly Withholding Return back to default template?')) {
+        setWithholdingReturnState(DEFAULT_WITHHOLDING_RETURN_STATE);
+      }
+    } else if (activeDocType === 'partnershipRecon') {
       if (window.confirm('Reset Partnership Reconstitution back to default template?')) {
         setPartnershipReconState(DEFAULT_PARTNERSHIP_RECON_STATE);
       }
@@ -191,7 +266,9 @@ export default function App() {
   };
 
   const activeTitle =
-    activeDocType === 'partnershipRecon'
+    activeDocType === 'withholdingReturn'
+      ? `Withholding Tax Return - ${withholdingReturnState.general.companyName}`
+      : activeDocType === 'partnershipRecon'
       ? `Partnership Reconstitution - ${partnershipReconState.firm.firmName}`
       : activeDocType === 'partnership'
       ? `Partnership Deed - ${partnershipState.info.firmName}`
@@ -204,7 +281,9 @@ export default function App() {
       : companyState.company.companyName || 'Company Registration Template';
 
   const activeSubtitle =
-    activeDocType === 'partnershipRecon'
+    activeDocType === 'withholdingReturn'
+      ? `Income Tax Act • ${withholdingReturnState.general.month} • FY ${withholdingReturnState.general.fy} • TIN: ${withholdingReturnState.general.tin} • ${withholdingReturnState.salaries.length} Employees`
+      : activeDocType === 'partnershipRecon'
       ? `Partnership Act 1932 • Form V & 7 Statutory Docs • Reg: ${partnershipReconState.firm.regNo} • Recon Date: ${partnershipReconState.firm.reconDate}`
       : activeDocType === 'partnership'
       ? `Partnership Act 1932 • 25 Statutory Clauses • Capital TK ${formatTaka(partnershipState.info.capitalAmount)} (50:50)`
@@ -229,9 +308,13 @@ export default function App() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onPrint={handlePrint}
+        onExportPdf={handleExportPdf}
+        isExportingPdf={isExportingPdf}
         onExportJson={handleExportJson}
         onImportJson={handleImportJson}
         onReset={handleReset}
+        docLang={docLang}
+        onDocLangChange={setDocLang}
       />
 
       {/* Main Workspace Area */}
@@ -245,7 +328,12 @@ export default function App() {
                 : 'hidden md:block w-full md:w-[45%] lg:w-[40%] xl:w-[36%]'
             }`}
           >
-            {activeDocType === 'partnershipRecon' ? (
+            {activeDocType === 'withholdingReturn' ? (
+              <WithholdingReturnInputPanel
+                data={withholdingReturnState}
+                onChange={setWithholdingReturnState}
+              />
+            ) : activeDocType === 'partnershipRecon' ? (
               <PartnershipReconInputPanel
                 data={partnershipReconState}
                 onChange={setPartnershipReconState}
@@ -283,42 +371,107 @@ export default function App() {
         {/* Right Side: Live A4 Document Output Panel */}
         {(viewMode === 'split' || viewMode === 'preview') && (
           <div
-            className={`h-full overflow-y-auto overflow-x-auto bg-slate-600/90 p-2 sm:p-4 lg:p-8 flex justify-center items-start print:p-0 print:bg-white print:overflow-visible transition-all duration-200 ${
+            className={`h-full overflow-y-auto overflow-x-auto bg-slate-600/90 p-2 sm:p-4 lg:p-8 flex flex-col items-center print:p-0 print:bg-white print:overflow-visible transition-all duration-200 ${
               viewMode === 'preview'
                 ? 'w-full'
                 : 'w-full md:w-[55%] lg:w-[60%] xl:w-[64%]'
             }`}
             id="document-output-scroll-container"
           >
-            {activeDocType === 'partnershipRecon' ? (
+            {/* Quick Statutory Compliance Language Bar */}
+            <div className="print:hidden w-full max-w-[210mm] mb-4 bg-slate-800/95 backdrop-blur-xs text-white px-3.5 py-2 rounded-lg border border-slate-700/80 shadow-md flex items-center justify-between text-xs gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${docLang === 'bn' ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`}></span>
+                <p className="truncate text-slate-300 text-xs">
+                  <span className="text-slate-400 font-normal">Statutory Compliance Mode:</span>{' '}
+                  <strong className="text-white">
+                    {docLang === 'bn' ? 'বাংলা (Bangla Statutory Standard)' : 'English (Courts & RJSC Official)'}
+                  </strong>
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[11px] text-slate-400 hidden sm:inline">Translate Output:</span>
+                <div className="flex bg-slate-900 p-0.5 rounded-md border border-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setDocLang('en')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer ${
+                      docLang === 'en'
+                        ? 'bg-slate-700 text-white'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDocLang('bn')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition font-bengali cursor-pointer ${
+                      docLang === 'bn'
+                        ? 'bg-emerald-600 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    বাংলা
+                  </button>
+                </div>
+
+                {/* Quick Export A4 PDF Button */}
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  disabled={isExportingPdf}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 active:scale-95 text-white font-semibold text-[11px] rounded-md shadow-xs transition cursor-pointer disabled:opacity-60"
+                  title="Download previewed document as high-resolution A4 PDF"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Save A4 PDF</span>
+                  <span className="sm:hidden">PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {activeDocType === 'withholdingReturn' ? (
+              <WithholdingReturnPreview
+                data={withholdingReturnState}
+                zoom={zoom}
+                docLang={docLang}
+              />
+            ) : activeDocType === 'partnershipRecon' ? (
               <PartnershipReconDocumentPreview
                 data={partnershipReconState}
                 zoom={zoom}
+                docLang={docLang}
               />
             ) : activeDocType === 'partnership' ? (
               <PartnershipDocumentPreview
                 data={partnershipState}
                 zoom={zoom}
+                docLang={docLang}
               />
             ) : activeDocType === 'rjscReturn' ? (
               <RjscReturnPreview
                 data={rjscReturnState}
                 zoom={zoom}
+                docLang={docLang}
               />
             ) : activeDocType === 'combined' ? (
               <CombinedDocumentPreview
                 data={combinedState}
                 zoom={zoom}
+                docLang={docLang}
               />
             ) : activeDocType === 'valuation' ? (
               <ValuationDocumentPreview
                 data={valuationState}
                 zoom={zoom}
+                docLang={docLang}
               />
             ) : (
               <DocumentPreview
                 data={companyState}
                 zoom={zoom}
+                docLang={docLang}
               />
             )}
           </div>
@@ -331,6 +484,16 @@ export default function App() {
         onClose={() => setSignatureModal((prev) => ({ ...prev, isOpen: false }))}
         onSave={handleSaveSignature}
         initialName={signatureModal.targetName}
+      />
+
+      {/* High-Resolution A4 PDF Export Progress Modal */}
+      <PdfExportModal
+        progress={pdfProgress}
+        fileName={getDefaultPdfFileName(activeDocType, getTargetDocState())}
+        onClose={() => {
+          setPdfProgress(null);
+          setIsExportingPdf(false);
+        }}
       />
     </div>
   );

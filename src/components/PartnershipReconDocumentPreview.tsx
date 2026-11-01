@@ -4,16 +4,19 @@ import {
   formatTakaCommas,
   toBengaliNumeral
 } from '../utils/partnershipReconCalculations';
+import { StatutoryLang, t, formatStatutoryNumeral } from '../utils/statutoryTranslations';
 import { Scale, ShieldCheck, FileText, CheckCircle2 } from 'lucide-react';
 
 interface PartnershipReconDocumentPreviewProps {
   data: PartnershipReconState;
   zoom: number;
+  docLang?: StatutoryLang;
 }
 
 export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentPreviewProps> = ({
   data,
-  zoom
+  zoom,
+  docLang = 'en'
 }) => {
   const {
     firm,
@@ -57,27 +60,32 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
                 {firm.firmName}
               </h2>
               <p className="text-[11px] text-slate-600 font-sans mt-0.5">
-                Registered Office: {firm.regAddress}
+                {t('doc.regOffice', docLang)} {firm.regAddress}
               </p>
               <div className="flex justify-center items-center gap-3 text-[10px] uppercase tracking-widest text-slate-500 font-sans mt-1">
-                <span>Reg. No.: {firm.regNo}</span>
+                <span>{t('doc.regNo', docLang)} {docLang === 'bn' ? toBengaliNumeral(firm.regNo) : firm.regNo}</span>
                 <span>•</span>
-                <span>Reg. Date: {firm.regDate}</span>
+                <span>{t('doc.regDate', docLang)} {docLang === 'bn' ? toBengaliNumeral(firm.regDate) : firm.regDate}</span>
               </div>
             </div>
 
             <div className="text-center my-4">
               <h3 className="text-base sm:text-lg font-bold uppercase underline tracking-wider text-slate-900">
-                Notice of Extraordinary Meeting of Partners
+                {t('recon.noticeTitle', docLang)}
               </h3>
+              {docLang === 'bn' && (
+                <p className="text-xs text-slate-600 font-sans mt-1">
+                  [অংশীদারী আইন, ১৯৩২-এর অধীনে সংবিধিবদ্ধ নোটিশ]
+                </p>
+              )}
             </div>
 
             <p className="text-justify mb-4">
-              Notice is hereby given that an Extraordinary General Meeting of the Partners of <strong>{firm.firmName}</strong> will be held on <strong>{meeting.meetDate}</strong> at the Registered Office of the firm ({firm.regAddress}) to discuss and consider the following special agenda:
+              Notice is hereby given that an Extraordinary General Meeting of the Partners of <strong>{firm.firmName}</strong> will be held on <strong>{docLang === 'bn' ? toBengaliNumeral(meeting.meetDate) : meeting.meetDate}</strong> at the Registered Office of the firm ({firm.regAddress}) to discuss and consider the following special agenda:
             </p>
 
             <h4 className="font-bold text-sm text-slate-900 mb-2 underline">
-              Agenda of the Meeting:
+              {t('recon.noticeAgenda', docLang)}
             </h4>
 
             <div className="space-y-3 text-justify pl-2">
@@ -90,14 +98,14 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
                   <strong>2. Admission of New Partner:</strong> To consider and approve the admission of <strong>{incoming.name}</strong> as a new Partner of the firm, subject to the applicable terms, conditions, and contribution covenants.
                 </p>
                 <div className="mt-2 bg-slate-50 p-3 border border-slate-200 rounded text-[12px] leading-normal space-y-1">
-                  <p className="font-semibold text-slate-800 underline">Particulars of the Proposed Incoming Partner:</p>
-                  <p><strong>Name:</strong> {incoming.name}</p>
-                  <p><strong>Father's Name:</strong> {incoming.father} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Mother's Name:</strong> {incoming.mother}</p>
-                  <p><strong>Present Address:</strong> {incoming.address}</p>
-                  <p><strong>Permanent Address:</strong> Same as present address</p>
-                  <p><strong>Occupation:</strong> {incoming.occupation} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Religion:</strong> {incoming.religion} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Nationality:</strong> {incoming.nationality}</p>
-                  <p><strong>Date of Birth:</strong> {incoming.dob} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>NID No.:</strong> {incoming.nid}</p>
-                  <p><strong>e-TIN:</strong> {incoming.tin} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Mobile:</strong> {incoming.mobile}</p>
+                  <p className="font-semibold text-slate-800 underline">{t('recon.incomingParticulars', docLang)}</p>
+                  <p><strong>{t('doc.name', docLang)}:</strong> {incoming.name}</p>
+                  <p><strong>{t('doc.father', docLang)}</strong> {incoming.father} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>{t('doc.mother', docLang)}</strong> {incoming.mother}</p>
+                  <p><strong>{t('doc.presentAddress', docLang)}</strong> {incoming.address}</p>
+                  <p><strong>{t('doc.permanentAddress', docLang)}</strong> Same as present address</p>
+                  <p><strong>{t('doc.occupation', docLang)}</strong> {incoming.occupation} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>{t('doc.religion', docLang)}</strong> {incoming.religion} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>{t('doc.nationality', docLang)}</strong> {incoming.nationality}</p>
+                  <p><strong>{t('doc.dob', docLang)}</strong> {docLang === 'bn' ? toBengaliNumeral(incoming.dob) : incoming.dob} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>{t('doc.nid', docLang)}</strong> {docLang === 'bn' ? toBengaliNumeral(incoming.nid) : incoming.nid}</p>
+                  <p><strong>{t('doc.tin', docLang)}</strong> {docLang === 'bn' ? toBengaliNumeral(incoming.tin) : incoming.tin} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>{t('doc.mobile', docLang)}</strong> {docLang === 'bn' ? toBengaliNumeral(incoming.mobile) : incoming.mobile}</p>
                 </div>
               </div>
 
@@ -145,23 +153,27 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
                 Registered Office: {firm.regAddress}
               </p>
               <h3 className="text-sm sm:text-base font-bold uppercase underline tracking-wider text-slate-900 mt-2">
-                Minutes of the Extraordinary General Meeting of Partners
+                {t('recon.minutesTitle', docLang)}
               </h3>
               <p className="text-[11px] text-slate-600 font-sans">
-                Held on {meeting.meetDate} at the Registered Office of the Firm
+                Held on {docLang === 'bn' ? toBengaliNumeral(meeting.meetDate) : meeting.meetDate} at the Registered Office of the Firm
               </p>
             </div>
 
-            <h4 className="font-bold text-sm text-slate-900 mb-2">1. Attendance of Partners</h4>
-            <p className="text-justify mb-3">The following partners were present at the meeting:</p>
+            <h4 className="font-bold text-sm text-slate-900 mb-2">
+              {docLang === 'bn' ? '১. অংশীদারগণের উপস্থিতি' : '1. Attendance of Partners'}
+            </h4>
+            <p className="text-justify mb-3">
+              {docLang === 'bn' ? 'অংশীদারগণের বিশেষ সাধারণ সভায় নিম্নবর্ণিত অংশীদারগণ উপস্থিত ছিলেন:' : 'The following partners were present at the meeting:'}
+            </p>
 
             <table className="w-full border-collapse border border-slate-400 mb-6 text-[12px] font-sans">
               <thead>
                 <tr className="bg-slate-100 font-bold text-slate-800">
-                  <th className="border border-slate-400 p-2 w-16 text-center">Sl. No.</th>
-                  <th className="border border-slate-400 p-2 text-left">Name of Partner</th>
-                  <th className="border border-slate-400 p-2 text-center w-36">Designation</th>
-                  <th className="border border-slate-400 p-2 text-center w-40">Signature</th>
+                  <th className="border border-slate-400 p-2 w-16 text-center">{t('doc.sl', docLang)}</th>
+                  <th className="border border-slate-400 p-2 text-left">{docLang === 'bn' ? 'অংশীদারের নাম' : 'Name of Partner'}</th>
+                  <th className="border border-slate-400 p-2 text-center w-36">{docLang === 'bn' ? 'পদবী / অবস্থান' : 'Designation'}</th>
+                  <th className="border border-slate-400 p-2 text-center w-40">{t('doc.signature', docLang)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -585,30 +597,36 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
           <div>
             {/* Header */}
             <div className="text-center mb-4 border-b border-slate-300 pb-3">
-              <h3 className="font-bold text-base text-slate-900 tracking-wider">FORM — V</h3>
+              <h3 className="font-bold text-base text-slate-900 tracking-wider">
+                {docLang === 'bn' ? 'ফরম — ৫ (FORM — V)' : 'FORM — V'}
+              </h3>
               <h2 className="text-sm sm:text-base font-bold uppercase tracking-wide text-slate-950 mt-1">
-                INTIMATION FOR RECORDING OF CHANGES IN THE CONSTITUTION OF A FIRM
+                {t('recon.formVTitle', docLang)}
               </h2>
               <p className="text-[11px] text-slate-700 font-sans mt-0.5">
-                UNDER THE PARTNERSHIP ACT, (ACT IX of 1932) [See Section 63 and Rule 4(6)]
+                {t('recon.formVSub', docLang)}
               </p>
             </div>
 
             {/* Recipient */}
             <div className="mb-4 text-[11.5px] leading-tight space-y-0.5 font-sans">
-              <p><strong>To,</strong></p>
-              <p className="font-bold text-slate-900">The Registrar of Joint Stock Companies & Firms,</p>
-              <p className="text-slate-700">6th Floor, TCB Bhaban, Kawran Bazar, Dhaka-1215, Bangladesh.</p>
+              <p><strong>{docLang === 'bn' ? 'বরাবর,' : 'To,'}</strong></p>
+              <p className="font-bold text-slate-900">
+                {docLang === 'bn' ? 'রেজিস্ট্রার, যৌথ মূলধন কোম্পানি ও ফার্মসমূহের পরিদপ্তর (RJSC),' : 'The Registrar of Joint Stock Companies & Firms,'}
+              </p>
+              <p className="text-slate-700">
+                {docLang === 'bn' ? 'টিসিবি ভবন (৭ম তলা), ১ কারওয়ান বাজার, ঢাকা-১২১৫, বাংলাদেশ।' : '6th Floor, TCB Bhaban, Kawran Bazar, Dhaka-1215, Bangladesh.'}
+              </p>
             </div>
 
-            <p className="mb-2 text-[11.5px]">Dear Sir,</p>
+            <p className="mb-2 text-[11.5px]">{docLang === 'bn' ? 'মহোদয়,' : 'Dear Sir,'}</p>
 
             <p className="text-justify text-[11px] leading-relaxed mb-4">
-              Notice is hereby given, pursuant to subsection (1) of Section 63 of the Partnership Act, 1932 (IX of 1932), of the following changes in the constitution of the firm, <strong>{firm.firmName}</strong>, bearing Registration No. <strong>{firm.regNo}</strong>, Date: <strong>{firm.regDate}</strong>. Consequent upon the cause that existing partner <strong>{outgoing.name}</strong> has transferred her entire share capital to new incoming partner <strong>{incoming.name}</strong> who has been inducted as partner, and a Reconstitution of Partnership Deed has been executed with the unanimous approval of the Board of Partners on date <strong>{firm.reconDate}</strong>. Now <strong>{partner1.sharePct}</strong>, <strong>{partner2.sharePct}</strong>, and <strong>{incoming.sharePct}</strong> share capital are being held by <strong>{partner1.name}</strong>, <strong>{partner2.name}</strong>, and <strong>{incoming.name}</strong> respectively.
+              Notice is hereby given, pursuant to subsection (1) of Section 63 of the Partnership Act, 1932 (IX of 1932), of the following changes in the constitution of the firm, <strong>{firm.firmName}</strong>, bearing Registration No. <strong>{docLang === 'bn' ? toBengaliNumeral(firm.regNo) : firm.regNo}</strong>, Date: <strong>{docLang === 'bn' ? toBengaliNumeral(firm.regDate) : firm.regDate}</strong>. Consequent upon the cause that existing partner <strong>{outgoing.name}</strong> has transferred her entire share capital to new incoming partner <strong>{incoming.name}</strong> who has been inducted as partner, and a Reconstitution of Partnership Deed has been executed with the unanimous approval of the Board of Partners on date <strong>{docLang === 'bn' ? toBengaliNumeral(firm.reconDate) : firm.reconDate}</strong>. Now <strong>{partner1.sharePct}</strong>, <strong>{partner2.sharePct}</strong>, and <strong>{incoming.sharePct}</strong> share capital are being held by <strong>{partner1.name}</strong>, <strong>{partner2.name}</strong>, and <strong>{incoming.name}</strong> respectively.
             </p>
 
             <p className="font-bold text-[11px] mb-2">
-              1. Particulars of Partners (Must tally with those in the deed of reconstitution of partnership, if any):
+              {docLang === 'bn' ? '১. অংশীদারগণের বিস্তারিত বিবরণী:' : '1. Particulars of Partners (Must tally with those in the deed of reconstitution of partnership, if any):'}
             </p>
 
             {/* 9-Column Comparative Table */}
@@ -616,22 +634,22 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
               <thead>
                 <tr className="bg-slate-100 font-bold text-slate-900 text-center">
                   <th colSpan={2} className="border border-slate-900 p-1 bg-slate-200">
-                    Previous Constitution
+                    {docLang === 'bn' ? 'পূর্ববর্তী গঠন' : 'Previous Constitution'}
                   </th>
                   <th colSpan={7} className="border border-slate-900 p-1 bg-slate-100">
-                    Position After Reconstitution
+                    {docLang === 'bn' ? 'পুনর্গঠন পরবর্তী বর্তমান গঠন' : 'Position After Reconstitution'}
                   </th>
                 </tr>
                 <tr className="bg-slate-50 font-semibold text-slate-800 text-center">
-                  <th className="border border-slate-900 p-1 w-24">Full Name of Partners</th>
-                  <th className="border border-slate-900 p-1 w-12">Share (%)</th>
-                  <th className="border border-slate-900 p-1 w-24">Full Name of Partners</th>
-                  <th className="border border-slate-900 p-1 w-20">Father's Name</th>
-                  <th className="border border-slate-900 p-1">Permanent Address</th>
-                  <th className="border border-slate-900 p-1 w-14">Nationality</th>
-                  <th className="border border-slate-900 p-1 w-16">Capital (BDT)</th>
-                  <th className="border border-slate-900 p-1 w-12">Share (%)</th>
-                  <th className="border border-slate-900 p-1 w-28">Remarks / Status</th>
+                  <th className="border border-slate-900 p-1 w-24">{docLang === 'bn' ? 'অংশীদারের নাম' : 'Full Name of Partners'}</th>
+                  <th className="border border-slate-900 p-1 w-12">{docLang === 'bn' ? 'শেয়ার (%)' : 'Share (%)'}</th>
+                  <th className="border border-slate-900 p-1 w-24">{docLang === 'bn' ? 'অংশীদারের পূর্ণ নাম' : 'Full Name of Partners'}</th>
+                  <th className="border border-slate-900 p-1 w-20">{docLang === 'bn' ? 'পিতার নাম' : "Father's Name"}</th>
+                  <th className="border border-slate-900 p-1">{docLang === 'bn' ? 'স্থায়ী ঠিকানা' : 'Permanent Address'}</th>
+                  <th className="border border-slate-900 p-1 w-14">{docLang === 'bn' ? 'জাতীয়তা' : 'Nationality'}</th>
+                  <th className="border border-slate-900 p-1 w-16">{docLang === 'bn' ? 'মূলধন (টাকা)' : 'Capital (BDT)'}</th>
+                  <th className="border border-slate-900 p-1 w-12">{docLang === 'bn' ? 'শেয়ার (%)' : 'Share (%)'}</th>
+                  <th className="border border-slate-900 p-1 w-28">{docLang === 'bn' ? 'অবস্থা / মন্তব্য' : 'Remarks / Status'}</th>
                 </tr>
                 <tr className="bg-slate-200 text-slate-600 text-center text-[9px]">
                   <th className="border border-slate-900 py-0.5">1</th>
@@ -889,10 +907,10 @@ export const PartnershipReconDocumentPreview: React.FC<PartnershipReconDocumentP
 
             <div className="text-center my-6">
               <h3 className="text-base sm:text-lg font-bold uppercase underline tracking-widest text-slate-900">
-                PUBLIC NOTICE OF RECONSTITUTION OF PARTNERSHIP FIRM
+                {t('recon.publicNoticeTitle', docLang)}
               </h3>
               <p className="text-xs text-slate-600 font-sans mt-1">
-                [Under Section 72 of the Partnership Act, 1932 (Act IX of 1932)]
+                {docLang === 'bn' ? '[অংশীদারী আইন, ১৯৩২ (১৯৩২ সালের ৯ নং আইন)-এর ধারা ৭২ মোতাবেক সংবিধিবদ্ধ গণবিজ্ঞপ্তি]' : '[Under Section 72 of the Partnership Act, 1932 (Act IX of 1932)]'}
               </p>
             </div>
 
