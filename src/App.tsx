@@ -10,23 +10,28 @@ import { RjscReturnInputPanel } from './components/RjscReturnInputPanel';
 import { RjscReturnPreview } from './components/RjscReturnPreview';
 import { PartnershipInputPanel } from './components/PartnershipInputPanel';
 import { PartnershipDocumentPreview } from './components/PartnershipDocumentPreview';
+import { PartnershipReconInputPanel } from './components/PartnershipReconInputPanel';
+import { PartnershipReconDocumentPreview } from './components/PartnershipReconDocumentPreview';
 import { SignatureModal } from './components/SignatureModal';
 import { DEFAULT_DOCUMENT_STATE } from './data/defaultData';
 import { DEFAULT_VALUATION_STATE } from './data/defaultValuationData';
 import { DEFAULT_COMBINED_STATE } from './data/defaultCombinedData';
 import { DEFAULT_RJSC_RETURN_STATE } from './data/defaultRjscReturnData';
 import { DEFAULT_PARTNERSHIP_STATE } from './data/defaultPartnershipData';
+import { DEFAULT_PARTNERSHIP_RECON_STATE } from './data/defaultPartnershipReconData';
 import { DocumentState } from './types/company';
 import { ValuationDocumentState } from './types/valuation';
 import { CombinedDossierState } from './types/combinedDossier';
 import { RjscReturnState } from './types/rjscReturn';
 import { PartnershipDeedState } from './types/partnership';
+import { PartnershipReconState } from './types/partnershipRecon';
 import { formatTaka } from './utils/partnershipCalculations';
 
 export default function App() {
   const [activeDocType, setActiveDocType] = useState<
-    'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership'
-  >('partnership');
+    'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon'
+  >('partnershipRecon');
+  const [partnershipReconState, setPartnershipReconState] = useState<PartnershipReconState>(DEFAULT_PARTNERSHIP_RECON_STATE);
   const [partnershipState, setPartnershipState] = useState<PartnershipDeedState>(DEFAULT_PARTNERSHIP_STATE);
   const [valuationState, setValuationState] = useState<ValuationDocumentState>(DEFAULT_VALUATION_STATE);
   const [companyState, setCompanyState] = useState<DocumentState>(DEFAULT_DOCUMENT_STATE);
@@ -102,7 +107,10 @@ export default function App() {
     let payload: any = rjscReturnState;
     let prefix = 'RJSC_Annual_Return_Hijaz';
 
-    if (activeDocType === 'partnership') {
+    if (activeDocType === 'partnershipRecon') {
+      payload = partnershipReconState;
+      prefix = `${partnershipReconState.firm.firmName.replace(/[^a-zA-Z0-9]/g, '_')}_Reconstitution`;
+    } else if (activeDocType === 'partnership') {
       payload = partnershipState;
       prefix = `${partnershipState.info.firmName.replace(/\s+/g, '_')}_Deed`;
     } else if (activeDocType === 'rjscReturn') {
@@ -131,7 +139,10 @@ export default function App() {
   };
 
   const handleImportJson = (imported: any) => {
-    if (imported.info?.firmName && imported.party1 && imported.party2) {
+    if (imported.firm && imported.incoming && imported.outgoing) {
+      setPartnershipReconState(imported);
+      setActiveDocType('partnershipRecon');
+    } else if (imported.info?.firmName && imported.party1 && imported.party2) {
       setPartnershipState(imported);
       setActiveDocType('partnership');
     } else if (imported.meetingInfo && imported.people) {
@@ -152,7 +163,11 @@ export default function App() {
   };
 
   const handleReset = () => {
-    if (activeDocType === 'partnership') {
+    if (activeDocType === 'partnershipRecon') {
+      if (window.confirm('Reset Partnership Reconstitution back to default template?')) {
+        setPartnershipReconState(DEFAULT_PARTNERSHIP_RECON_STATE);
+      }
+    } else if (activeDocType === 'partnership') {
       if (window.confirm('Reset Partnership Deed back to default template?')) {
         setPartnershipState(DEFAULT_PARTNERSHIP_STATE);
       }
@@ -176,7 +191,9 @@ export default function App() {
   };
 
   const activeTitle =
-    activeDocType === 'partnership'
+    activeDocType === 'partnershipRecon'
+      ? `Partnership Reconstitution - ${partnershipReconState.firm.firmName}`
+      : activeDocType === 'partnership'
       ? `Partnership Deed - ${partnershipState.info.firmName}`
       : activeDocType === 'rjscReturn'
       ? `RJSC Return - ${rjscReturnState.meetingInfo.companyName}`
@@ -187,7 +204,9 @@ export default function App() {
       : companyState.company.companyName || 'Company Registration Template';
 
   const activeSubtitle =
-    activeDocType === 'partnership'
+    activeDocType === 'partnershipRecon'
+      ? `Partnership Act 1932 • Form V & 7 Statutory Docs • Reg: ${partnershipReconState.firm.regNo} • Recon Date: ${partnershipReconState.firm.reconDate}`
+      : activeDocType === 'partnership'
       ? `Partnership Act 1932 • 25 Statutory Clauses • Capital TK ${formatTaka(partnershipState.info.capitalAmount)} (50:50)`
       : activeDocType === 'rjscReturn'
       ? `Reg: ${rjscReturnState.meetingInfo.regNo} • ${rjscReturnState.people.length} Members • AGM: ${rjscReturnState.meetingInfo.agmDate}`
@@ -226,7 +245,12 @@ export default function App() {
                 : 'hidden md:block w-full md:w-[45%] lg:w-[40%] xl:w-[36%]'
             }`}
           >
-            {activeDocType === 'partnership' ? (
+            {activeDocType === 'partnershipRecon' ? (
+              <PartnershipReconInputPanel
+                data={partnershipReconState}
+                onChange={setPartnershipReconState}
+              />
+            ) : activeDocType === 'partnership' ? (
               <PartnershipInputPanel
                 data={partnershipState}
                 onChange={setPartnershipState}
@@ -266,7 +290,12 @@ export default function App() {
             }`}
             id="document-output-scroll-container"
           >
-            {activeDocType === 'partnership' ? (
+            {activeDocType === 'partnershipRecon' ? (
+              <PartnershipReconDocumentPreview
+                data={partnershipReconState}
+                zoom={zoom}
+              />
+            ) : activeDocType === 'partnership' ? (
               <PartnershipDocumentPreview
                 data={partnershipState}
                 zoom={zoom}

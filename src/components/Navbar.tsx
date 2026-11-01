@@ -15,8 +15,8 @@ import {
 import { DocumentState } from '../types/company';
 
 interface NavbarProps {
-  activeDocType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership';
-  onDocTypeChange: (docType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership') => void;
+  activeDocType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon';
+  onDocTypeChange: (docType: 'valuation' | 'company' | 'combined' | 'rjscReturn' | 'partnership' | 'partnershipRecon') => void;
   title: string;
   zoom: number;
   onZoomChange: (newZoom: number) => void;
@@ -75,6 +75,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </h1>
             {/* Template Selector dropdown / buttons */}
             <div className="hidden xl:flex items-center bg-slate-800 p-0.5 rounded-md border border-slate-700 text-[11px]">
+              <button
+                type="button"
+                onClick={() => onDocTypeChange('partnershipRecon')}
+                className={`px-2 py-0.5 rounded transition ${
+                  activeDocType === 'partnershipRecon'
+                    ? 'bg-rose-700 text-white font-semibold'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Reconstitution (Form V)
+              </button>
               <button
                 type="button"
                 onClick={() => onDocTypeChange('partnership')}
@@ -137,6 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onChange={(e) => onDocTypeChange(e.target.value as any)}
               className="xl:hidden bg-slate-800 border border-slate-700 text-white text-[11px] rounded px-1.5 py-0.5 font-medium"
             >
+              <option value="partnershipRecon">Partnership Reconstitution (Form V & 7 Docs)</option>
               <option value="partnership">Partnership Deed (1932 Act)</option>
               <option value="rjscReturn">RJSC Annual Return & AGM</option>
               <option value="combined">Combined Legal (7 Docs)</option>
